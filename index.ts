@@ -20,15 +20,22 @@ export type UnionAny<T> = UnionToIntersection<
     : never
   : never;
 
-type GroupToMap<T extends Group, R extends TypeMap> = [keyof T] extends [never]
-  ? R
-  : UnionAny<keyof T> extends infer I extends keyof T
-  ? GroupToMap<
-      Omit<T, I>,
-      [Exclude<T[I], undefined>] extends [never]
-        ? R
-        : SomethingToMap<Exclude<T[I], undefined>, R>
-    >
+type GroupToMap<T extends Group, R extends TypeMap> = GroupToMapInternal<
+  [R, T]
+> extends infer I extends [TypeMap, Group]
+  ? [keyof I[1]] extends [never]
+    ? I[0]
+    : GroupToMap<I[1], I[0]>
+  : never;
+
+type GroupToMapInternal<R extends [TypeMap, Group]> = [keyof R[1]] extends [
+  never
+]
+  ? [R[0], {}]
+  : UnionAny<keyof R[1]> extends infer I extends keyof R[1]
+  ? [Exclude<R[1][I], undefined>] extends [never]
+    ? [R[0], Omit<R[1], I>]
+    : [SomethingToMap<Exclude<R[1][I], undefined>, R[0]>, Omit<R[1], I>]
   : never;
 
 type SomethingToMap<
